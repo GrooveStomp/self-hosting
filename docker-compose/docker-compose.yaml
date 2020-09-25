@@ -1,0 +1,99 @@
+version: '3'
+
+services:
+  db:
+    image: groovestomp/selfhost-postgres
+    restart: always
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+      - ./postgres.conf:/etc/postgresql/postgresql.conf
+    env_file:
+      - postgres.env
+
+  reverse-proxy:
+    image: traefik:v2.2
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  nextcloud:
+    image: nextcloud:17-apache
+    ports:
+      - 8001:80
+    links:
+      - db
+    volumes:
+      - ./volumes/nextcloud:/var/www/html
+    restart: always
+    env_file:
+      - ./nextcloud.env
+    depends_on:
+      - db
+
+  pleroma:
+    image: groovestomp/selfhost-pleroma
+    restart: always
+    ports:
+      - '127.0.0.1:8002:4000'
+    volumes:
+      - ./volumes/pleroma:/pleroma/uploads
+    depends_on:
+      - db
+
+  # redis:
+  #   restart: always
+  #   image: redis:6.0-alpine
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #   volumes:
+  #     - ./volumes/redis:/data
+
+  # mastodon-web:
+  #   image: tootsuite/mastodon
+  #   restart: always
+  #   env_file:
+  #     - ./mastodon.env
+  #   command: bash -c "rm -f /mastodon/tmp/pids/server.pid; bundle exec rails s -p 3000"
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -q --spider --proxy=off localhost:#000/health || exit 1"]
+  #   ports:
+  #     - "127.0.0.1:8003:3000"
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   volumes:
+  #     - ./volumes/mastodon:/mastodon/public/system
+
+  # mastodon-stream:
+  #   image: tootsuite/mastodon
+  #   restart: always
+  #   env_file:
+  #     - ./mastodon.env
+  #   command: node ./streaming
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget -q --spider --proxy=off localhost:4000/api/v1/streaming/health || exit 1"]
+  #   ports:
+  #     - "127.0.0.1:8004:4000"
+  #   depends_on:
+  #     - db
+  #     - redis
+
+  # mastodon-bg:
+  #   image: tootsuite/mastodon
+  #   restart: always
+  #   env_file:
+  #     - ./mastodon.env
+  #   command: bundle exec sidekiq
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   volumes:
+  #     - ./volumes/mastodon:/mastodon/public/system
+
+  whoami:
+    image: containous/whoami
+    labels:
+      - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"

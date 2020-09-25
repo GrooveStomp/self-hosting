@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  db:
+    image: postgres-aaron
+    restart: always
+    volumes:
+      - ./volumes/postgres:/var/lib/postgresql/data
+      - ./postgres.conf:/etc/postgresql/postgresql.conf
+    env_file:
+      - postgres.env
+
+  reverse-proxy:
+    image: traefik:v2.2
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  nextcloud:
+    image: nextcloud:17-apache
+    ports:
+      - 8001:80
+    links:
+      - db
+    volumes:
+      - ./volumes/nextcloud:/var/www/html
+    restart: always
+    env_file:
+      - ./nextcloud.env
+    depends_on:
+      - db
+
+  pleroma:
+    image: pleroma
+    # container_name: pleroma_web
+    restart: always
+    ports:
+      - '127.0.0.1:8002:4000'
+    volumes:
+      - ./volumes/pleroma:/pleroma/uploads
+    depends_on:
+      - db
+
+  whoami:
+    image: containous/whoami
+    labels:
+      - "traefik.http.routers.whoami.rule=Host(`whoami.docker.localhost`)"

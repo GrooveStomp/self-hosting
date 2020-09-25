@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+DATE=$(date +%Y-%m-%d)
+mkdir /s3/postgres/$DATE/
+tar cf - /home/gs/selfhost/docker-compose/volumes/postgres | tar xCf /s3/postgres/$DATE/
