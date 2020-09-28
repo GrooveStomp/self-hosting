@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-LAST_DATE=$(ls /s3/nextcloud | sort -r | head -n 1)
-DATE=$(date +%Y-%m-%d)
-WORKDIR=/home/aaron/code/vps
+CURRENT_DATE=$(date +%Y-%m-%d)
+WORKDIR=/disk2/code/groovestomp/self-hosting
 
 LAST_DATE=$(ls /s3/nextcloud | sort -r | head -n 1)
 if [[ ! $(date -d "$LAST_DATE") ]]; then
@@ -13,9 +12,9 @@ HAS_DIFF=0
 if [ ! "$LAST_DATE" ]; then
     HAS_DIFF=1
 else
-  if diff $WORKDIR/docker-compose/volumes/nextcloud/config /s3/nextcloud/$LAST_DATE/config; then
+  if [[ $(diff $WORKDIR/docker-compose/volumes/nextcloud/config /s3/nextcloud/$LAST_DATE/config) ]]; then
     HAS_DIFF=1
-  elif diff $WORKDIR/docker-compose/volumes/nextcloud/data /s3/nextcloud/$LAST_DATE/data; then
+  elif [[ $(diff $WORKDIR/docker-compose/volumes/nextcloud/data /s3/nextcloud/$LAST_DATE/data) ]]; then
     HAS_DIFF=1
   fi
 fi
@@ -25,8 +24,9 @@ if [ "0" == "$HAS_DIFF" ]; then
     exit 0
 fi
 
-mkdir /s3/nextcloud/$DATE/
-set -x
-tar cf - $WORKDIR/docker-compose/volumes/nextcloud/config | tar xCf /s3/nextcloud/$DATE/
-tar cf - $WORKDIR/docker-compose/volumes/nextcloud/data | tar xCf /s3/nextcloud/$DATE/
-set +x
+mkdir /s3/nextcloud/$CURRENT_DATE
+
+pushd $WORKDIR/docker-compose/volumes/nextcloud
+tar cf - config | tar xCf /s3/nextcloud/$CURRENT_DATE/ -
+tar cf - data | tar xCf /s3/nextcloud/$CURRENT_DATE/ -
+popd
