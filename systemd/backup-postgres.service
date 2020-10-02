@@ -1,0 +1,10 @@
+[Unit]
+Description=Postgres backup
+Wants=backup-postgres.timer
+
+[Service]
+Type=oneshot
+ExecStart=backup-postgres
+
+[Install]
+WantedBy=multi-user.target

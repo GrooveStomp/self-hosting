@@ -1,0 +1,10 @@
+[Unit]
+Description=Nextcloud backup
+Wants=backup-nextcloud.timer
+
+[Service]
+Type=oneshot
+ExecStart=backup-nextcloud
+
+[Install]
+WantedBy=multi-user.target

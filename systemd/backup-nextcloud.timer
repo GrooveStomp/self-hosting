@@ -1,0 +1,12 @@
+[Unit]
+Description=Nextcloud backup timer
+Requires=backup-nextcoud.service
+
+[Timer]
+#          Y-M-D HH:MM:SS
+OnCalendar=*-*-* 01:00:00
+RandomizedDelaySec=1800
+Unit=backup-nextcloud.service
+
+[Install]
+WantedBy=timers.target
