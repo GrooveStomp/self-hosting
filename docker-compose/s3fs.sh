@@ -1,7 +1,18 @@
+#!/usr/bin/env bash
+
+if [[ "$S3_BUCKET" == "" || "$AWS_REGION" == "" ]]; then
+    echo "S3_BUCKET and AWS_REGION are required"
+    exit 1
+fi
+
+if [[ ! -d /s3 ]]; then
+    mkdir /s3
+fi
+
 s3fs \
     -o passwd_file=$(pwd)/.passwd-s3fs \
     -f \
-    -o bucket=yowx4y2arto4sdc5wkoaedir \
-    -o url="https://s3-us-east-2.amazonaws.com" \
+    -o bucket=$S3_BUCKET \
+    -o url="https://$AWS_REGION.amazonaws.com" \
     -o allow_other \
-    $(pwd)/s3
+    /s3
