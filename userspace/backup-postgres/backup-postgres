@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+if [[ -z "$BACKUP_DIR" ]]; then
+    BACKUP_DIR=/s3/postgres
+fi
+
+if [[ -z "$WORKDIR" ]]; then
+    WORKDIR=/home/gs/self-hosting
+fi
+
+CURRENT_DATE=$(date +%Y-%m-%d)
+
+LAST_DATE=$(ls $BACKUP_DIR | sort -r | head -n 1)
+if [[ ! $(date -d "$LAST_DATE") ]]; then
+    LAST_DATE=""
+fi
+
+HAS_DIFF=0
+if [ ! "$LAST_DATE" ]; then
+    HAS_DIFF=1
+else
+  if [[ $(diff $WORKDIR/docker-compose/volumes/postgres $BACKUP_DIR/$LAST_DATE/) ]]; then
+    HAS_DIFF=1
+  fi
+fi
+
+if [ "0" == "$HAS_DIFF" ]; then
+    echo "No diff to backup"
+    exit 0
+fi
+
+mkdir $BACKUP_DIR/$CURRENT_DATE
+
+pushd $WORKDIR/docker-compose/volumes/postgres
+tar cf - . | tar xCf $BACKUP_DIR/$CURRENT_DATE/ -
+popd
