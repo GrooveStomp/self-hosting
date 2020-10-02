@@ -1,6 +1,6 @@
 [Unit]
 Description=Nextcloud backup timer
-Requires=backup-nextcoud.service
+Requires=backup-nextcloud.service
 
 [Timer]
 #          Y-M-D HH:MM:SS

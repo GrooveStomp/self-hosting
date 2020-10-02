@@ -2,7 +2,7 @@
 .PHONY: help install
 
 help:
-	./view-help.sh README.md
+	../view-help.sh README.md
 
 install:
 	cp backup-nextcloud /usr/local/bin/
